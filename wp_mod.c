@@ -12,10 +12,6 @@
 #define MSM_MAX_PARTITIONS 48
 #define HIJACK_SIZE 12
 
-char *system_part[] = {"system"};
-
-unsigned long addr_get_partition_num_by_name;
-
 struct htc_emmc_partition {
 	unsigned int dev_num;
 	unsigned int partition_size;
@@ -29,10 +25,12 @@ static int my_get_partition_num_by_name(char *name)
 {
 	struct htc_emmc_partition *ptn = emmc_partitions;
 	int i;
+	char caller[80];
 
-	if (strcmp(system_part[0], name) == 0) {
-		pr_debug("Allow write to system\n");
-	   	return 666;
+	sprintf(caller, "%ps", __builtin_return_address(0));
+
+	if (strcmp("generic_make_request_checks", caller) == 0) {
+		return 666;
 	} else {
 		for (i = 0; i < MSM_MAX_PARTITIONS && ptn->partition_name; i++, ptn++) {
 			if (strcmp(ptn->partition_name, name) == 0)
@@ -74,8 +72,7 @@ static int __init wp_mod_init(void)
 		DRIVER_VERSION);
 	pr_info("wp_mod: by %s\n", DRIVER_AUTHOR);
 
-	addr_get_partition_num_by_name = kallsyms_lookup_name("get_partition_num_by_name");
-	hijack_start((void *)addr_get_partition_num_by_name, &my_get_partition_num_by_name);
+	hijack_start((void *)kallsyms_lookup_name("get_partition_num_by_name"), &my_get_partition_num_by_name);
 
 	return 0;
 }

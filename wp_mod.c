@@ -12,6 +12,8 @@
 #define MSM_MAX_PARTITIONS 48
 #define HIJACK_SIZE 12
 
+char *system_part[] = {"system"};
+
 struct htc_emmc_partition {
 	unsigned int dev_num;
 	unsigned int partition_size;
@@ -29,7 +31,7 @@ static int my_get_partition_num_by_name(char *name)
 
 	sprintf(caller, "%ps", __builtin_return_address(0));
 
-	if (strcmp("generic_make_request_checks", caller) == 0) {
+	if (strcmp("generic_make_request_checks", caller) == 0 && strcmp(system_part[0], name) == 0) {
 		return 666;
 	} else {
 		for (i = 0; i < MSM_MAX_PARTITIONS && ptn->partition_name; i++, ptn++) {
